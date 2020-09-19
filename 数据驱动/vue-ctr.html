@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+    <title>vue-ctr</title>
+  </head>
+  <body>
+    <div id="root">
+      <div>
+        <p>{{name}}-{{message}}</p>
+      </div>
+      <p>{{name}}</p>
+      <p>{{message}}</p>
+    </div>
+    <script>
+      function compiler (template, data){
+        let tempChildNode = template.childNodes;
+        let reg = /\{\{(.+?)\}\}/g;
+        for (let i =0;i<tempChildNode.length;i++){
+          let type = tempChildNode[i].nodeType; // 1 元素节点 3 文本节点
+          if (type === 3) {
+            let text = tempChildNode[i].nodeValue;  // 该属性只有文本节点才有意义
+
+            text=text.replace(reg,function(_,g){  // repalce 使用正则表达式匹配一次 函数就会执行一次
+                                                     // 函数的第 0 个参数 表示匹配到的内容
+                                                     // 函数的第 n 个参数 表示正则中的 第 n 组
+              let key = g.trim();// 写在花括号里面的东西
+              return data[key]
+            })
+            tempChildNode[i].nodeValue=text;
+          }else if (type === 1) {
+            compiler(tempChildNode[i],data);
+          }
+        }
+      }
+    function JGVue(options){
+      // 注：内部数据使用下划线 _ 开头， 只读数据使用 $ 开头
+      this._el = options.el;
+      this._data = options.data;
+
+      // 准备工作（准备Dom)
+       this._templateDom = document.querySelector(this._el);
+       this._parentNode = this._templateDom.parentNode;
+      // 渲染工作
+      this.render()
+    }
+
+    JGVue.prototype.render = function (){
+      this.compiler()
+
+    }
+    JGVue.prototype.compiler = function (){
+      let realDom = this._templateDom.cloneNode(true);
+      compiler(realDom,this._data);
+      this.update(realDom)
+    }
+    JGVue.prototype.update = function (real) {
+       this._parentNode.replaceChild(real,document.querySelector('#root'))
+    }
+    let app= new JGVue({
+      el:'#root',
+      data:{
+        name:'rootName',
+        message:'rootMessage'
+      }
+    })
+    </script>
+  </body>
+</html>

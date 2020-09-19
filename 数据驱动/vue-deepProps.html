@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+    <title>vue-ctr</title>
+  </head>
+  <body>
+
+    <script>
+      let data={
+        a:{
+          b:{
+            c:{
+              d:{
+                f:'到底了'
+              }
+            }
+          }
+        }
+      }
+      // 函数柯里化 提前编译，提高性能
+      function getValueByPath(obj){
+        let res = obj;
+        return function (path){
+          let _pathArr = path.split('.');
+          while(g=_pathArr.shift()){
+          res=res[g]
+        }
+        return res;
+        }
+      }
+      let result=getValueByPath(data);
+      console.log(result('a.b.c.d.f'))
+    </script>
+  </body>
+</html>

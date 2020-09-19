@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+    <title>vue-ctr</title>
+  </head>
+  <body>
+    <div id="root">
+      <div>
+        <p>{{name}}-{{message}}</p>
+      </div>
+      <p>{{name}}</p>
+      <p>{{message}}</p>
+    </div>
+    <script>
+     class JGVue {
+
+     }
+     /**
+      * 真正的Vue中使用了  二次提交 的设计结构
+      * 1. 在页面的 DOM 和虚拟 DOM 是一一对应的关系
+      * 2. 先有 AST 和 数据 生成 VNode (新的VNode, render实现的)
+      * 3. 将 旧的VNode 和 新的VNode 比较(diff) , 更新(update)
+      */
+    // let app= new JGVue({
+    //   el:'#root',
+    //   data:{
+    //     name:'rootName',
+    //     message:'rootMessage'
+    //   }
+    // })
+    </script>
+  </body>
+</html>

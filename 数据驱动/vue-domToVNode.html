@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+    <title>vue-ctr</title>
+  </head>
+  <body>
+    <div id="root" title="1" class="main" style="color:red">
+      <div>
+        <p>hello1</p>
+        <p>hello2</p>
+        <p>hello3</p>
+      </div>
+      <p class="name">name</p>
+      <p>message</p>
+    </div>
+    <script>
+      // <div>  {tag:'div'}
+      // 文本节点 {tag: undefined, value:'文本节点'}
+      // <div title="1" class="main"> {tag:'div', data: {title:'1',class:'main'}}
+      // <div><p></p></div>  {tag:'div',chilren:[{tag:'p',value:undefined}]}
+     class toVNode{
+       constructor(tag,value,type,data){
+        this.tag = tag && tag.toLowerCase();
+        this.value = value;
+        this.data = data;
+        this.type = type;
+        this.children = []
+       }
+       appendChild(vNode){
+         this.children.push(vNode)
+       }
+     }
+     function createVNode (node){
+       let nodeType = node.nodeType;
+       let _vNode =null;
+       if (nodeType === 1){ // 元素节点
+         let nodeName = node.nodeName;
+         let attrs = node.attributes;
+         let _attrObj={}
+         for (let i =0 ;i<attrs.length;i++){ //attrs[i] 属性节点 nodeType ===2 , 存在nodeName 和nodeValue
+          _attrObj[attrs[i].nodeName]=attrs[i].nodeValue
+         }
+         _vNode = new toVNode(nodeName,undefined,nodeType,_attrObj);
+         let childNodes = node.childNodes;
+         for (let i =0 ;i <childNodes.length;i++){
+           _vNode.appendChild(createVNode(childNodes[i]))
+         }
+       }else if (nodeType === 3){ // 文本节点
+        _vNode = new toVNode(undefined,node.nodeValue,nodeType,undefined);
+       }
+       return _vNode;
+     }
+    let realDom = document.querySelector('#root')
+    let vNode =createVNode(realDom)
+    console.log(realDom)
+    console.log(vNode)
+
+    function createRealDom(vnode){
+      let realDom=null;
+      if ( vnode.type === 1){
+         realDom = document.createElement(vnode.tag);
+         for (let key in vnode.data){
+           let attr =document.createAttribute(key);
+           attr.value= vnode.data[key]
+           realDom.setAttributeNode(attr)
+         }
+         for (let i = 0 ; i< vnode.children.length;i++){
+          realDom.appendChild(createRealDom(vnode.children[i]))
+         }
+      }else if( vnode.type === 3 ){
+        realDom = document.createTextNode(vnode.value)
+      }
+      return realDom
+    }
+    let realNode =createRealDom(vNode)
+    console.log(realNode)
+    root.parentNode.replaceChild(realNode,root)
+    </script>
+  </body>
+</html>
