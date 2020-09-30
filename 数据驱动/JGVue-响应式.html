@@ -75,7 +75,6 @@
           }
         }else if (_type === 3){ // 文本结点
           _value = _value.replace(reg, function (_, g) {
-            console.log(g)
             return getValueByPath(data,g.trim())
           })
           _node = new VNode(_tag,_value,_type,_data)
@@ -114,6 +113,7 @@
         let elm = document.querySelector(option.el)
         this._el = elm;
         this._parentNode = elm.parentNode
+        reactivity(this._data,this)
         this.mount(); // 挂载
      }
      JGVue.prototype.mount = function (){
@@ -142,16 +142,78 @@
       // 虚拟dom 渲染到页面中：diff算法
       JGVue.prototype.update = function (vnode){
        let realDom= parseVnode(vnode);
-       this._parentNode.replaceChild(realDom, this._el)
+       console.log('update',this._parentNode.children[0])
+       console.log('realDom',realDom)
+       console.log('this._el',this._el)
+       this._parentNode.replaceChild(realDom, document.querySelector('#root'))
        console.log(realDom)
       }
-    let app= new JGVue({
-      el:'#root',
-      data:{
-        name:'rootName1',
-        message:'rootMessage'
+      /**响应式化处理部分*/
+        // 拦截数组的方法
+     let ARRAY_METHODS = ['push','pop','shift','unshift','reverse','splice','sort']
+
+      // 思路：原型式继承：修改原型链的结构
+      // 继承关系：arr -> Array.prototypr -> Object.prototype -> ...
+      // 继承关系： arr -> 改写的方法 -> Arrary.prototype -> Object.prototype -> ...
+      let arrary_method = Object.create(Array.prototype);
+      ARRAY_METHODS.forEach(method =>{
+        arrary_method[method] = function () {
+          // 数组数据响应式化
+          for (let i = 0; i<arguments.length;i++){
+            reactivity(arguments[i])
+          }
+          reactivity(arguments)
+        let resLength= Array.prototype[method].apply(this, arguments);
+        return resLength;// 返回长度
+        }
+      })
+
+      function defineReact(target,key,value,enumberable,vm){
+        const that = vm;
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)){
+          reactivity(value)
+        }
+
+        Object.defineProperty(target,key,{
+          enumberable:!!enumberable,
+          configurable:true,
+          get(){
+            console.log('调用get方法')
+            return value
+          },
+          set(newVal){
+            console.log('调用set方法')
+            // reactivity(newVal)
+            value = newVal
+            that.mountComponent()
+
+          }
+        })
       }
-    })
+      function reactivity(obj,vm){
+        let keys = Object.keys(obj);
+        for (let i =0;i< keys.length;i++){
+          let key = keys[i]
+          let _value = obj[key];
+          if (Array.isArray(_value)){
+            _value.__proto__ = arrary_method
+          for (let j =0;j<_value.length;j++){
+            reactivity(_value[j])
+          }
+          }else{
+            defineReact(obj,key,_value,true,vm)
+          }
+        }
+        // console.log(keys)
+      }
+
+      let app= new JGVue({
+        el:'#root',
+        data:{
+          name:'rootName1',
+          message:'rootMessage'
+        }
+      })
     </script>
   </body>
 </html>

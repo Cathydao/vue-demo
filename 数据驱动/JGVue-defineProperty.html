@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+    <title>vue-ctr</title>
+  </head>
+  <body>
+    <!-- <div id="root" class="main">
+      <div>
+        <p>{{name}}-{{message}}</p>
+      </div>
+      <p>{{name}}</p>
+      <p>{{message}}</p>
+    </div> -->
+    <script>
+      // 拦截数组的方法
+    let ARRAY_METHODS = ['push','pop','shift','unshift','reverse','splice','sort']
+
+    // 思路：原型式继承：修改原型链的结构
+    // 继承关系：arr -> Array.prototypr -> Object.prototype -> ...
+    // 继承关系： arr -> 改写的方法 -> Arrary.prototype -> Object.prototype -> ...
+    let arrary_method = Object.create(Array.prototype);
+    ARRAY_METHODS.forEach(method =>{
+      arrary_method[method] = function () {
+        // 数组数据响应式化
+        for (let i = 0; i<arguments.length;i++){
+          reactivity(arguments[i])
+        }
+        reactivity(arguments)
+       let resLength= Array.prototype[method].apply(this, arguments);
+       return resLength;// 返回长度
+      }
+    })
+    let data={
+      cc:12,
+      name:'张山',
+      coursers:[
+        {name:'语文'},
+        {name:'数学'},
+        {name:'英语'},
+        {name:'科学'}
+      ]
+    }
+    function defineReact(target,key,value,enumberable){
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)){
+        reactivity(value)
+      }
+      Object.defineProperty(target,key,{
+        enumberable:!!enumberable,
+        configurable:true,
+        get(){
+          console.log('调用get方法')
+          return value
+        },
+        set(newVal){
+          console.log('调用set方法')
+          // reactivity(newVal)
+          value = reactivity(newVal)
+
+        }
+      })
+    }
+    function reactivity(obj){
+      let keys = Object.keys(obj);
+      for (let i =0;i< keys.length;i++){
+        let key = keys[i]
+        let _value = obj[key];
+        if (Array.isArray(_value)){
+          _value.__proto__ = arrary_method
+         for (let j =0;j<_value.length;j++){
+          reactivity(_value[j])
+         }
+        }else{
+          defineReact(obj,key,_value,true)
+        }
+      }
+      // console.log(keys)
+    }
+    reactivity(data)
+    </script>
+  </body>
+</html>
